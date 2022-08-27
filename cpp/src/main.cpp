@@ -4,6 +4,5 @@
 
 int main() {
    chip8 chip;
-   chip.echoROM();
    return 0;
 }

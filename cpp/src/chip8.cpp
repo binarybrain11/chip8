@@ -10,140 +10,137 @@
 #include <fstream>      // File I/O
 #include <string>       // String helpers
 #include <cstdlib>      // Random 
-#include <time.h>       // Seeding the random 
-#include <boost>        // Asynch processes, mostly input
+#include <thread>       // Sleep function
+#include <chrono>       // Time for accurate sleep
 
 /* UNIX stuff */
 #include <termios.h>    // Reading input raw, no echo
- // #include <unistd.h>     // POSIX stuff
+#include <unistd.h>     // STDIN_FILENO
 
-/* 
- * Class constructor for opening stdin
- */
-chip8::chip8( ){
-   this->RAM = new char[4096];
-   /* Initializing the font */
-   this->RAM[ 0] = 0b0100 0000; // .#..
-   this->RAM[ 1] = 0b1010 0000; // #.#.
-   this->RAM[ 2] = 0b1010 0000; // #.#.
-   this->RAM[ 3] = 0b1010 0000; // #.#.
-   this->RAM[ 4] = 0b0100 0000; // .#..
-
-   this->RAM[ 5] = 0b0100 0000; // .#..
-   this->RAM[ 6] = 0b1100 0000; // ##..
-   this->RAM[ 7] = 0b0100 0000; // .#..
-   this->RAM[ 8] = 0b0100 0000; // .#..
-   this->RAM[ 9] = 0b1110 0000; // ###.
-
-   this->RAM[10] = 0b1110 0000; // ###.
-   this->RAM[11] = 0b0010 0000; // ..#.
-   this->RAM[12] = 0b1110 0000; // ###.
-   this->RAM[13] = 0b1000 0000; // #...
-   this->RAM[14] = 0b1110 0000; // ###.
-
-   this->RAM[15] = 0b1110 0000; // ###.
-   this->RAM[16] = 0b0010 0000; // ..#.
-   this->RAM[17] = 0b1110 0000; // ###.
-   this->RAM[18] = 0b0010 0000; // ..#.
-   this->RAM[19] = 0b1110 0000; // ###.
-
-   this->RAM[20] = 0b1010 0000; // #.#.
-   this->RAM[21] = 0b1010 0000; // #.#.
-   this->RAM[22] = 0b1110 0000; // ###.
-   this->RAM[23] = 0b0010 0000; // ..#.
-   this->RAM[24] = 0b0010 0000; // ..#.
-
-   this->RAM[25] = 0b1110 0000; // ###.
-   this->RAM[26] = 0b1000 0000; // #...
-   this->RAM[27] = 0b1110 0000; // ###.
-   this->RAM[28] = 0b0010 0000; // ..#.
-   this->RAM[29] = 0b1110 0000; // ###.
-
-   this->RAM[30] = 0b1110 0000; // ###.
-   this->RAM[31] = 0b1000 0000; // #...
-   this->RAM[32] = 0b1110 0000; // ###.
-   this->RAM[33] = 0b1010 0000; // #.#.
-   this->RAM[34] = 0b1110 0000; // ###.
-
-   this->RAM[35] = 0b1110 0000; // ###.
-   this->RAM[36] = 0b0010 0000; // ..#.
-   this->RAM[37] = 0b0010 0000; // ..#.
-   this->RAM[38] = 0b0010 0000; // ..#.
-   this->RAM[39] = 0b0010 0000; // ..#.
-
-   this->RAM[40] = 0b1110 0000; // ###.
-   this->RAM[41] = 0b1010 0000; // #.#.
-   this->RAM[42] = 0b1110 0000; // ###.
-   this->RAM[43] = 0b1010 0000; // #.#.
-   this->RAM[44] = 0b1110 0000; // ###.
-
-   this->RAM[45] = 0b1110 0000; // ###.
-   this->RAM[46] = 0b1010 0000; // #.#.
-   this->RAM[47] = 0b1110 0000; // ###.
-   this->RAM[48] = 0b0010 0000; // ..#.
-   this->RAM[49] = 0b0010 0000; // ..#.
-
-   this->RAM[50] = 0b1110 0000; // ###.
-   this->RAM[51] = 0b1010 0000; // #.#.
-   this->RAM[52] = 0b1110 0000; // ###.
-   this->RAM[53] = 0b1010 0000; // #.#.
-   this->RAM[54] = 0b1010 0000; // #.#.
-
-   this->RAM[55] = 0b1100 0000; // ##..
-   this->RAM[56] = 0b1010 0000; // #.#.
-   this->RAM[57] = 0b1110 0000; // ###.
-   this->RAM[58] = 0b1010 0000; // #.#.
-   this->RAM[59] = 0b1100 0000; // ##..
-
-   this->RAM[60] = 0b1110 0000; // ###.
-   this->RAM[61] = 0b1000 0000; // #...
-   this->RAM[62] = 0b1000 0000; // #...
-   this->RAM[63] = 0b1000 0000; // #...
-   this->RAM[64] = 0b1110 0000; // ###.
-
-   this->RAM[65] = 0b1100 0000; // ##..
-   this->RAM[66] = 0b1010 0000; // #.#.
-   this->RAM[67] = 0b1010 0000; // #.#.
-   this->RAM[68] = 0b1010 0000; // #.#.
-   this->RAM[69] = 0b1100 0000; // ##..
-
-   this->RAM[70] = 0b1110 0000; // ###.
-   this->RAM[71] = 0b1000 0000; // #...
-   this->RAM[72] = 0b1100 0000; // ##..
-   this->RAM[73] = 0b1000 0000; // #...
-   this->RAM[74] = 0b1110 0000; // ###.
-
-   this->RAM[75] = 0b1110 0000; // ###.
-   this->RAM[76] = 0b1000 0000; // #...
-   this->RAM[77] = 0b1100 0000; // ##..
-   this->RAM[78] = 0b1000 0000; // #...
-   this->RAM[79] = 0b1000 0000; // #...
-
-
-   /* Creates a clean console for the display */ 
-   std::cout << "\e[1J";
-
-   /* RNG seed */ 
-   std::srand(time(NULL));
-
-   /* Open ROM */
-   this->ROM = &std::cin;
-   std::cout << this->ROM;
+chip8::chip8() {
+   
 }
 
 /* 
  * Class constructor for opening a file
  */
 chip8::chip8( std::string ROMname ){
-   /* TODO copy from default constructor */
+   this->RAM = new unsigned char[4096];
+   /* Initializing the font */
+   this->RAM[ 0] = 0b01000000; // .#..
+   this->RAM[ 1] = 0b10100000; // #.#.
+   this->RAM[ 2] = 0b10100000; // #.#.
+   this->RAM[ 3] = 0b10100000; // #.#.
+   this->RAM[ 4] = 0b01000000; // .#..
+
+   this->RAM[ 5] = 0b01000000; // .#..
+   this->RAM[ 6] = 0b11000000; // ##..
+   this->RAM[ 7] = 0b01000000; // .#..
+   this->RAM[ 8] = 0b01000000; // .#..
+   this->RAM[ 9] = 0b11100000; // ###.
+
+   this->RAM[10] = 0b11100000; // ###.
+   this->RAM[11] = 0b00100000; // ..#.
+   this->RAM[12] = 0b11100000; // ###.
+   this->RAM[13] = 0b10000000; // #...
+   this->RAM[14] = 0b11100000; // ###.
+
+   this->RAM[15] = 0b11100000; // ###.
+   this->RAM[16] = 0b00100000; // ..#.
+   this->RAM[17] = 0b11100000; // ###.
+   this->RAM[18] = 0b00100000; // ..#.
+   this->RAM[19] = 0b11100000; // ###.
+
+   this->RAM[20] = 0b10100000; // #.#.
+   this->RAM[21] = 0b10100000; // #.#.
+   this->RAM[22] = 0b11100000; // ###.
+   this->RAM[23] = 0b00100000; // ..#.
+   this->RAM[24] = 0b00100000; // ..#.
+
+   this->RAM[25] = 0b11100000; // ###.
+   this->RAM[26] = 0b10000000; // #...
+   this->RAM[27] = 0b11100000; // ###.
+   this->RAM[28] = 0b00100000; // ..#.
+   this->RAM[29] = 0b11100000; // ###.
+
+   this->RAM[30] = 0b11100000; // ###.
+   this->RAM[31] = 0b10000000; // #...
+   this->RAM[32] = 0b11100000; // ###.
+   this->RAM[33] = 0b10100000; // #.#.
+   this->RAM[34] = 0b11100000; // ###.
+
+   this->RAM[35] = 0b11100000; // ###.
+   this->RAM[36] = 0b00100000; // ..#.
+   this->RAM[37] = 0b00100000; // ..#.
+   this->RAM[38] = 0b00100000; // ..#.
+   this->RAM[39] = 0b00100000; // ..#.
+
+   this->RAM[40] = 0b11100000; // ###.
+   this->RAM[41] = 0b10100000; // #.#.
+   this->RAM[42] = 0b11100000; // ###.
+   this->RAM[43] = 0b10100000; // #.#.
+   this->RAM[44] = 0b11100000; // ###.
+
+   this->RAM[45] = 0b11100000; // ###.
+   this->RAM[46] = 0b10100000; // #.#.
+   this->RAM[47] = 0b11100000; // ###.
+   this->RAM[48] = 0b00100000; // ..#.
+   this->RAM[49] = 0b00100000; // ..#.
+
+   this->RAM[50] = 0b11100000; // ###.
+   this->RAM[51] = 0b10100000; // #.#.
+   this->RAM[52] = 0b11100000; // ###.
+   this->RAM[53] = 0b10100000; // #.#.
+   this->RAM[54] = 0b10100000; // #.#.
+
+   this->RAM[55] = 0b11000000; // ##..
+   this->RAM[56] = 0b10100000; // #.#.
+   this->RAM[57] = 0b11100000; // ###.
+   this->RAM[58] = 0b10100000; // #.#.
+   this->RAM[59] = 0b11000000; // ##..
+
+   this->RAM[60] = 0b11100000; // ###.
+   this->RAM[61] = 0b10000000; // #...
+   this->RAM[62] = 0b10000000; // #...
+   this->RAM[63] = 0b10000000; // #...
+   this->RAM[64] = 0b11100000; // ###.
+
+   this->RAM[65] = 0b11000000; // ##..
+   this->RAM[66] = 0b10100000; // #.#.
+   this->RAM[67] = 0b10100000; // #.#.
+   this->RAM[68] = 0b10100000; // #.#.
+   this->RAM[69] = 0b11000000; // ##..
+
+   this->RAM[70] = 0b11100000; // ###.
+   this->RAM[71] = 0b10000000; // #...
+   this->RAM[72] = 0b11000000; // ##..
+   this->RAM[73] = 0b10000000; // #...
+   this->RAM[74] = 0b11100000; // ###.
+
+   this->RAM[75] = 0b11100000; // ###.
+   this->RAM[76] = 0b10000000; // #...
+   this->RAM[77] = 0b11000000; // ##..
+   this->RAM[78] = 0b10000000; // #...
+   this->RAM[79] = 0b10000000; // #...
+
+   /* Creates a clean console for the display */ 
+   std::cout << "\e[1J";
+
+   /* RNG seed */ 
+   std::chrono::time_point time = std::chrono::steady_clock::now();
+   std::srand( 
+         std::chrono::duration_cast<std::chrono::milliseconds>( 
+            time.time_since_epoch() 
+         )
+      .count() );
 
    /* Open ROM */
-   std::filebuf ROMbuf;
-   if ( ROMbuf.open( ROMname, std::ios::in) ){
-      this->ROM = new std::istream( &ROMbuf );
-   } else {
-      this->ROM = &std::cin;
-   }
+   this->openROM( ROMname );
+
+   /* Start the key listening thread */
+   this->enableInput();
+   this->running = true;
+   this->keyListenThread = std::thread(&chip8::listenKey, this);
 }
 
 /* 
@@ -151,9 +148,20 @@ chip8::chip8( std::string ROMname ){
  */
 chip8::~chip8(){
    /* TODO revisit */
-   if ( this->ROM != &std::cin ) {
-      delete this->ROM;
+   delete this->ROM;
+   this->running = false;
+   this->keyListenThread.join();
+}
+
+void chip8::openROM( std::string ROMname ){
+   std::filebuf ROMbuf;
+   if ( ROMbuf.open( ROMname, std::ios::in) ){
+      this->ROM = new std::istream( &ROMbuf );
+   } else {
+      exit(1);
    }
+   /* Load the ROM into RAM */
+   *(this->ROM) >> (this->RAM + 0x200);
 }
 
 /* 
@@ -168,6 +176,7 @@ void chip8::opcode( unsigned int code ) {
             this->RAM[ row * (DISP_WIDTH/8) + col ] = 0;
          }
       }
+      this->PC += 2;
    } 
    else if ( code == 0x00EE ) 
    {
@@ -179,7 +188,8 @@ void chip8::opcode( unsigned int code ) {
       /* Calls machine code routine at address 0x0NNN
        * not necessary for most ROMs
        */
-      this->opcode( this->RAM );
+      this->opcode( this->RAM[ this->PC ] );
+      this->PC += 2;
    } 
    else if ( ( 0xF000 & code ) == 0x1000 )
    { 
@@ -197,16 +207,18 @@ void chip8::opcode( unsigned int code ) {
       /* Skips next instruction if VX ( 0x0X00 ) equals 0x00NN */
       char X = (code & 0x0F00) >> 8;
       if ( this->V[X] == (unsigned char)( code & 0x00FF ) ) {
-         PC+=2;
+         this->PC += 2;
       }
+      this->PC += 2;
    }
    else if ( ( 0xF000 & code ) == 0x4000 )
    {
       /* Skips next instruction if VX ( 0x0X00 ) not equals 0x00NN */
       char X = (code & 0x0F00) >> 8;
       if ( this->V[X] != (unsigned char)( code & 0x00FF ) ) {
-         PC+=2;
+         this->PC += 2;
       }
+      this->PC += 2;
    }
    else if ( ( 0xF00F & code ) == 0x5000 )
    {
@@ -214,20 +226,23 @@ void chip8::opcode( unsigned int code ) {
       char X = (code & 0x0F00) >> 8;
       char Y = (code & 0x00F0) >> 4;
       if ( this->V[X] != this->V[Y] ) {
-         PC+=2;
+         this->PC += 2;
       }
+      this->PC += 2;
    }
    else if ( ( 0xF000 & code ) == 0x6000 )
    {
       /* Sets VX ( 0x0X00 ) to 0x00NN */
       char X = code & 0x0F00 >> 8;
       this->V[X] = code & 0x00FF;
+      this->PC += 2;
    }
    else if ( ( 0xF000 & code ) == 0x7000 )
    {
       /* Adds 0x00NN to VX ( 0x0X00 ), carry flag unchanged */
       char X = code & 0x0F00 >> 8;
       this->V[X] += code & 0x00FF;
+      this->PC += 2;
    }
    else if ( ( 0xF000 & code ) == 0x8000 )
    {
@@ -238,6 +253,7 @@ void chip8::opcode( unsigned int code ) {
          char X = (code & 0x0F00) >> 8;
          char Y = (code & 0x00F0) >> 4;
          this->V[X] = this->V[Y];
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0001 ) 
       {
@@ -245,6 +261,7 @@ void chip8::opcode( unsigned int code ) {
          char X = (code & 0x0F00) >> 8;
          char Y = (code & 0x00F0) >> 4;
          this->V[X] = this->V[X] | this->V[Y];
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0002 ) 
       {
@@ -252,6 +269,7 @@ void chip8::opcode( unsigned int code ) {
          char X = (code & 0x0F00) >> 8;
          char Y = (code & 0x00F0) >> 4;
          this->V[X] = this->V[X] & this->V[Y];
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0003 ) 
       {
@@ -259,6 +277,7 @@ void chip8::opcode( unsigned int code ) {
          char X = (code & 0x0F00) >> 8;
          char Y = (code & 0x00F0) >> 4;
          this->V[X] = this->V[X] ^ this->V[Y];
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0004 ) 
       {
@@ -274,6 +293,7 @@ void chip8::opcode( unsigned int code ) {
          } else {
             this->V[0xF] = 0;
          }
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0005 ) 
       {
@@ -289,6 +309,7 @@ void chip8::opcode( unsigned int code ) {
          } else {
             this->V[0xF] = 1;
          }
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0006 ) 
       {
@@ -298,6 +319,7 @@ void chip8::opcode( unsigned int code ) {
          char X = (code & 0x0F00) >> 8;
          this->V[0xF] = this->V[X] & 0x1;
          this->V[X] = this->V[X] >> 1;
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0007 ) 
       {
@@ -313,6 +335,7 @@ void chip8::opcode( unsigned int code ) {
          } else {
             this->V[0xF] = 1;
          }
+         this->PC += 2;
       }
       else if ( ( 0x000F & code ) == 0x0008 ) 
       {
@@ -322,6 +345,7 @@ void chip8::opcode( unsigned int code ) {
          char X = (code & 0x0F00) >> 8;
          this->V[0xF] = this->V[X] >> 7;
          this->V[X] = this->V[X] << 1;
+         this->PC += 2;
       }
    }
    else if ( ( 0xF00F & code ) == 0x9000 )
@@ -332,11 +356,13 @@ void chip8::opcode( unsigned int code ) {
       if ( this->V[X] != this->V[Y] ) {
          this->PC += 2;
       }
+      this->PC += 2;
    }
    else if ( ( 0xF000 & code ) == 0xA000 )
    {
       /* Sets I to address 0x0NNN */
       this->I = code & 0x0FFF;
+      this->PC += 2;
    }
    else if ( ( 0xF000 & code ) == 0xB000 )
    {
@@ -350,6 +376,7 @@ void chip8::opcode( unsigned int code ) {
       char X = (code & 0x0F00) >> 8;
       unsigned char rand = std::rand();
       this->V[X] = code & 0xFF & rand;
+      this->PC += 2;
    }
    else if ( ( 0xF000 & code ) == 0xD000 )
    {
@@ -373,7 +400,7 @@ void chip8::opcode( unsigned int code ) {
          /* Checks to see if a set pixel is flipped */ 
          if ( 
               ( ( col < DISP_WIDTH ) && 
-                ( this->RAM[ row * (DISP_WIDTH/8) + col ] & lowMask & this->RAM[I + i] )
+                ( this->RAM[ row * (DISP_WIDTH/8) + col ] & lowMask & this->RAM[I + row] )
                   
               ) ||
               ( ( col + 1 < DISP_WIDTH ) &&
@@ -392,6 +419,7 @@ void chip8::opcode( unsigned int code ) {
             this->RAM[ row * (DISP_WIDTH/8) + col + 1] ^= this->RAM[I + row] & highMask;
          }
       }
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xE09E )
    {
@@ -406,8 +434,9 @@ void chip8::opcode( unsigned int code ) {
       /* Converts characters to number from numpad */
       c = this->numpad(c);
       if ( c == VX ) {
-         this->PC++;
+         this->PC += 2;
       }
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xE0A1 )
    {
@@ -423,8 +452,9 @@ void chip8::opcode( unsigned int code ) {
       c = this->numpad(c);
 
       if ( c != VX ) {
-         this->PC++;
+         this->PC += 2;
       }
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF007 )
    {
@@ -432,6 +462,7 @@ void chip8::opcode( unsigned int code ) {
        */
       char X = (code & 0x0F00) >> 8;
       this->V[X] = this->delay;
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF00A )
    {
@@ -439,6 +470,7 @@ void chip8::opcode( unsigned int code ) {
        */
       char X = (code & 0x0F00) >> 8;
       std::cin >> this->V[X];
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF015 )
    {
@@ -446,6 +478,7 @@ void chip8::opcode( unsigned int code ) {
        */
       char X = (code & 0x0F00) >> 8;
       this->delay = this->V[X];
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF018 )
    {
@@ -453,6 +486,7 @@ void chip8::opcode( unsigned int code ) {
        */
       char X = (code & 0x0F00) >> 8;
       this->sound = this->V[X];
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF01E )
    {
@@ -460,6 +494,7 @@ void chip8::opcode( unsigned int code ) {
        */
       char X = (code & 0x0F00) >> 8;
       this->I = this->I + this->V[X];
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF029 )
    {
@@ -471,6 +506,7 @@ void chip8::opcode( unsigned int code ) {
        */
       char X = (code & 0x0F00) >> 8;
       this->I = this->V[X] * 5;
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF033 )
    {
@@ -508,6 +544,7 @@ void chip8::opcode( unsigned int code ) {
          // This modifies a copy of VX, the register is still intact
          VX = VX << 1;
       }
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF055 )
    {
@@ -517,6 +554,7 @@ void chip8::opcode( unsigned int code ) {
       for (int i=0; i<NUM_REGISTERS; i++) {
          this->RAM[this->I + i] = this->V[i];
       }
+      this->PC += 2;
    }
    else if ( ( 0xF0FF & code ) == 0xF065 )
    {
@@ -526,10 +564,7 @@ void chip8::opcode( unsigned int code ) {
       for (int i=0; i<NUM_REGISTERS; i++) {
          this->V[i] = this->RAM[this->I + i];
       }
-   }
-   else 
-   {
-      return 1;
+      this->PC += 2;
    }
 }
 
@@ -555,7 +590,6 @@ int chip8::enableInput() {
    this->tOptsNew = this->tOptsOld;
    this->tOptsNew.c_lflag &= ~(ICANON | ECHO);
    tcsetattr(STDIN_FILENO, TCSANOW, &(this->tOptsNew));
-   this->input = true;
    return 0;
 }
 
@@ -577,23 +611,23 @@ unsigned char chip8::numpad( unsigned char c ) {
        ************************************************/
       /* Mapping table */
       switch(c) {
-         case '7': c = 1; break;
-         case '8': c = 2; break;
-         case '9': c = 3; break;
-         case '0': c = 0xA; break;
-         case 'u': c = 4; break;
-         case 'i': c = 5; break;
-         case 'o': c = 6; break;
-         case 'p': c = 0xB; break;
-         case 'j': c = 7; break;
-         case 'k': c = 8; break;
-         case 'l': c = 9; break;
-         case ';': c = 0xC; break;
-         case 'm': c = 0xE; break;
-         case ',': c = 0; break;
-         case '.': c = 0xF; break;
-         case '/': c = 0xD; break;
-         default: c = '*';
+         case '7': return 1; break;
+         case '8': return 2; break;
+         case '9': return 3; break;
+         case '0': return 0xA; break;
+         case 'u': return 4; break;
+         case 'i': return 5; break;
+         case 'o': return 6; break;
+         case 'p': return 0xB; break;
+         case 'j': return 7; break;
+         case 'k': return 8; break;
+         case 'l': return 9; break;
+         case ';': return 0xC; break;
+         case 'm': return 0xE; break;
+         case ',': return 0; break;
+         case '.': return 0xF; break;
+         case '/': return 0xD; break;
+         default: return '*';
       }
 
 }
@@ -607,37 +641,52 @@ unsigned char chip8::readKey() {
    return key;
 }
 
+void chip8::listenKey() {
+   while ( running ) {
+      std::cin >> this->key;
+   }
+}
+
 void chip8::enableDisplay() {
-   this->enableDisplay = true;
+   this->dispEnable = true;
 }
 
 void chip8::disableDisplay() {
-   this->enableDisplay = false;
+   this->dispEnable = false;
 }
 
 int chip8::run() {
    /* TODO implement the clock cycle */
+   /* Setup execution */
+   this->PC = 0x200;
    while ( true ) {
+      /* Start timer for this frame */
+      std::chrono::time_point start = std::chrono::steady_clock::now();
       /* Draw the display */
       if ( this->dispEnable ) {
          std::cout << "\e[1J";
          for ( int row = 0; row < DISP_HEIGHT; row++ ) {
             for ( int col = 0; col < DISP_WIDTH/8; col++ ) {
-               for ( int bit = 1; bit & 0b 1111 1111; bit << 1 ) {
+               for ( int bit = 1; bit & 0b11111111; bit << 1 ) {
                   if ( bit & this->RAM[ row * DISP_WIDTH + col ] ) {
                      /* on pixel */
-                     std::cout << "\e[47m \e[0m";
+                     std::cout << "\e[47m  \e[0m";
                   } else {
                      /* off pixel */
-                     std::cout << "\e[40m \e[0m";
+                     std::cout << "\e[40m  \e[0m";
                   }
                }
                std::cout << "\n";
             }
          }
       }
-      /* Read the next opcode */
-
+      /* Read the current opcode. PC is incremented/set in this function */
+      this->opcode( this->RAM[ this->PC ] );
       /* Wait for the next clock cycle */
+      std::chrono::time_point end = std::chrono::steady_clock::now();
+      std::this_thread::sleep_for( std::chrono::milliseconds( 
+               ( 1000 / FRAME_RATE ) - 
+               std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count()
+               ) );
    }
 }

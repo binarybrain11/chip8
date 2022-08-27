@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <boost>
+#include <thread>
 
 /* UNIX stuff */
 #include <termios.h>
@@ -13,6 +13,7 @@
 #define DISP_HEIGHT 32
 #define DISP_WIDTH 64
 #define NUM_REGISTERS 16
+#define FRAME_RATE 60
 
 class chip8 {
    private: 
@@ -28,6 +29,7 @@ class chip8 {
        * and variables. 
        */
       unsigned char* RAM;
+      void openROM( std::string );
       /* Registers, labeled V0 - VF. Use hex for indexing. 
        * VF doubles as a flag register so should be avoided. 
        */
@@ -52,6 +54,9 @@ class chip8 {
       struct termios tOptsOld;
       unsigned char key;
       unsigned char readKey();
+      void listenKey();
+      std::thread keyListenThread;
+      bool running;
 
       unsigned char numpad( unsigned char );
 
